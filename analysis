@@ -1,0 +1,92 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+import file
+    
+def linear_regression(dataset):
+    """
+    Linear Regression via orthoganal projection theorem:
+    beta = (X^T,X)^-1A^TY
+    """
+    # Make sure data is of right type:
+    if type(dataset) != np.ndarray or dataset.dtype != float:
+        dataset = list(dataset)
+        dataset = np.array(dataset,float)
+    # Determine coefficients of MLR
+    X = dataset.T[0:-1].T
+    Y = dataset.T[-1:].T
+    X = np.insert(X,0,1.,axis=1)
+    X_TxX = np.matmul(X.T,X)
+    # If det = 0 then there are multiple solutions to regression
+    if np.linalg.det(X_TxX) == 0:
+        print("No unique solution")
+        raise ValueError
+    X_TxX_inv = np.linalg.inv(X_TxX)
+    H = np.matmul(X_TxX_inv,X.T)
+    HxY = np.matmul(H,Y)
+    beta = tuple(HxY.flatten())
+    # Analyze quality of least-squares model: SUM(e^2) = SUM(Y-Y_hat)^2
+    Y = Y.flatten()
+    n = len(Y)
+    p = len(beta) - 1
+    Y_hat = np.matmul(X,beta)
+    e = Y - Y_hat
+    sum_e_squared = np.matmul(e,e.T)
+    # approximate sigma using s = SUM(e^2)/n-p-1
+    SSres = sum_e_squared/(n-p-1) 
+    s_y = np.sqrt(SSres)
+    y_bar = np.mean(Y)
+    Y_bar = np.ones(len(Y))
+    Y_bar.fill(y_bar)
+    residual = Y-Y_bar
+    Stot = np.matmul(residual,residual.T)
+    SStot = Stot/(n-p-1)
+    # R^2 = Coefficient of Determination (Sum of Squares =: SS)
+    R_squared = 1-(SSres/SStot)
+    R_squared_adjusted = R_squared - p*(1-R_squared)/(n-p)
+
+    return {'coefficients':beta,
+            'mean':y_bar,
+            'std': np.std(Y),
+            's_y':s_y,
+            'R^2':R_squared,
+            'R^2_adj':R_squared_adjusted
+            }
+
+def plot_data(dataset,x_axis=0,y_axis=-1,regression=True):
+    if type(dataset) != np.ndarray or dataset.dtype != float:
+        dataset = list(dataset)
+        dataset = np.array(dataset,float)
+    if x_axis == -1:
+        x_scatter = dataset.T[-1:]
+    else:
+        x_scatter = dataset.T[x_axis:x_axis+1]
+    if y_axis == -1:
+        y_scatter = dataset.T[-1:]
+    else:
+        y_scatter = dataset.T[y_axis:y_axis+1]
+    x_scatter = x_scatter.flatten()
+    y_scatter = y_scatter.flatten()
+    plt.scatter(x_scatter,y_scatter,label='Data')
+    if regression==True:
+        data = []
+        for i in range(dataset.shape[0]):
+            data.append([x_scatter[i],y_scatter[i]])
+        lin_reg = linear_regression(data)
+        coefficients = lin_reg['coefficients']
+        b = coefficients[0]
+        m = coefficients[x_axis+1]
+        minimum = np.amin(dataset.T[x_axis:x_axis+1])
+        maximum = np.amax(dataset.T[x_axis:x_axis+1])
+        x = np.linspace(minimum,maximum,5)
+    plt.plot(x,m*x+b, label='Regression',color='red')
+    plt.suptitle('Data presented below:')
+    plt.title('Data')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.legend()
+        
+    plt.show()
+
+x = file.import_list('/Users/brendansheehan/test_files/MultLineReg',delimiter='\t')
+plot_data(x)
