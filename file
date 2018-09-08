@@ -1,0 +1,56 @@
+#utilities
+
+def import_str(file,clean=False,delete=[]):
+    """
+    Generates a sting from a file 
+    'clean' removes newlines and b''
+    'delete' must be a list    
+    """
+    file = open(file,"rb") #get bytes file
+    data = file.read()
+    if clean == True:
+        data = str(data);data = data.replace('b','') #replace leading b'...', newlines, and excess '"
+        data = data.replace('\\n','');x = x.replace("'",'');x = x.replace('"','')
+    if len(delete) != 0:
+        data = str(data)
+        del_list = []
+        print(type(delete))
+        if type(delete) != list:
+            raise TypeError("delete must be string or list")
+        if type(delete) == list:
+            for string in del_list:
+                data = data.replace(string,'')
+    file.close()
+    return data
+
+def import_list(filename,delimiter=','):
+    """
+    Line by line import of list
+    """
+    file = open(filename, "r")
+    data = []
+    for line in file:
+        vector = []
+        start = 0
+        while True:
+            stop = line.find(delimiter,start)
+            vector.append((line[start:stop]))
+            start = stop + 1
+            if stop == -1:
+                break
+        data.append(vector)
+    return data
+    
+# Use configparser for dictionary import if possible 
+
+
+def str_to_list(string,delimiter=','):
+    str_list = []
+    start = 0
+    while True:
+        stop = string.find(delimiter,start)
+        str_list.append((string[start:stop]))
+        start = stop + 1
+        if stop == -1:
+            break
+    return str_list
